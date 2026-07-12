@@ -13,30 +13,42 @@ export default function FleetMap({ vehicles, drivers }: FleetMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const markerGroupRef = useRef<L.LayerGroup | null>(null);
 
+  // 1. Initialize Map once on mount, clean up on unmount
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Create Map only if not already initialized
-    if (!mapRef.current) {
-      mapRef.current = L.map(mapContainerRef.current, {
-        zoomControl: true,
-        scrollWheelZoom: false,
-      }).setView([38.5, -96.0], 4); // Centered over US
+    const map = L.map(mapContainerRef.current, {
+      zoomControl: true,
+      scrollWheelZoom: false,
+    }).setView([38.5, -96.0], 4); // Centered over US
 
-      // Modern dark/light-friendly clean map theme
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
-        maxZoom: 20
-      }).addTo(mapRef.current);
+    // Modern dark/light-friendly clean map theme
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }).addTo(map);
 
-      markerGroupRef.current = L.layerGroup().addTo(mapRef.current);
-    }
+    const markerGroup = L.layerGroup().addTo(map);
+
+    mapRef.current = map;
+    markerGroupRef.current = markerGroup;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+      markerGroupRef.current = null;
+    };
+  }, []);
+
+  // 2. Update markers when vehicles or drivers list changes
+  useEffect(() => {
+    const map = mapRef.current;
+    const markerGroup = markerGroupRef.current;
+    if (!map || !markerGroup) return;
 
     // Clear old markers
-    if (markerGroupRef.current) {
-      markerGroupRef.current.clearLayers();
-    }
+    markerGroup.clearLayers();
 
     // Static coordinated mock data for vehicles to place on the map
     const vehicleCoords: Record<string, [number, number]> = {
@@ -56,7 +68,6 @@ export default function FleetMap({ vehicles, drivers }: FleetMapProps) {
       const assocDriver = drivers.find(d => d.id === (vehicle.id === 'v-1' ? 'd-1' : vehicle.id === 'v-2' ? 'd-2' : vehicle.id === 'v-3' ? 'd-4' : 'd-3'));
 
       // Beautiful SVG vector pin marker representing vehicles
-      const isCritical = vehicle.health < 75 || vehicle.fuel < 40;
       const markerColor = vehicle.status === 'Active' ? '#22C55E' : vehicle.status === 'In Service' ? '#3B82F6' : '#EF4444';
       
       const svgIcon = L.divIcon({
@@ -74,54 +85,52 @@ export default function FleetMap({ vehicles, drivers }: FleetMapProps) {
       });
 
       // Bind dynamic popup
-      if (mapRef.current && markerGroupRef.current) {
-        const popupContent = `
-          <div class="p-2 font-sans space-y-1.5 text-xs text-slate-800" style="min-width: 170px;">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-1">
-              <span class="font-bold text-slate-900">${vehicle.name}</span>
-              <span class="text-[9px] font-mono px-1 bg-slate-100 rounded text-slate-500">${vehicle.plate}</span>
+      const popupContent = `
+        <div class="p-2 font-sans space-y-1.5 text-xs text-slate-800" style="min-width: 170px;">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-1">
+            <span class="font-bold text-slate-900">${vehicle.name}</span>
+            <span class="text-[9px] font-mono px-1 bg-slate-100 rounded text-slate-500">${vehicle.plate}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-1.5 text-[10px] font-semibold text-slate-600">
+            <div>
+              <span class="block text-slate-400 text-[9px] uppercase">Driver</span>
+              <span class="text-slate-800">${assocDriver?.name || 'Unassigned'}</span>
             </div>
-            <div class="grid grid-cols-2 gap-1.5 text-[10px] font-semibold text-slate-600">
-              <div>
-                <span class="block text-slate-400 text-[9px] uppercase">Driver</span>
-                <span class="text-slate-800">${assocDriver?.name || 'Unassigned'}</span>
-              </div>
-              <div>
-                <span class="block text-slate-400 text-[9px] uppercase">Fuel level</span>
-                <span class="${vehicle.fuel < 40 ? 'text-rose-600' : 'text-slate-800'} font-bold">${vehicle.fuel}%</span>
-              </div>
-              <div>
-                <span class="block text-slate-400 text-[9px] uppercase">Health score</span>
-                <span class="text-slate-800 font-bold">${vehicle.health}%</span>
-              </div>
-              <div>
-                <span class="block text-slate-400 text-[9px] uppercase">Status</span>
-                <span class="text-white px-1 py-0.5 rounded text-[8px] font-bold" style="background-color: ${markerColor}">${vehicle.status}</span>
-              </div>
+            <div>
+              <span class="block text-slate-400 text-[9px] uppercase">Fuel level</span>
+              <span class="${vehicle.fuel < 40 ? 'text-rose-600' : 'text-slate-800'} font-bold">${vehicle.fuel}%</span>
+            </div>
+            <div>
+              <span class="block text-slate-400 text-[9px] uppercase">Health score</span>
+              <span class="text-slate-800 font-bold">${vehicle.health}%</span>
+            </div>
+            <div>
+              <span class="block text-slate-400 text-[9px] uppercase">Status</span>
+              <span class="text-white px-1 py-0.5 rounded text-[8px] font-bold" style="background-color: ${markerColor}">${vehicle.status}</span>
             </div>
           </div>
-        `;
+        </div>
+      `;
 
-        const marker = L.marker(coords, { icon: svgIcon })
-          .bindPopup(popupContent, { closeButton: false, offset: [0, -10] })
-          .addTo(markerGroupRef.current);
-          
-        // Optional path routing simulation (draw lines to target destination cities)
-        if (vehicle.status === 'Active' || vehicle.status === 'In Service') {
-          const destCoords: Record<string, [number, number]> = {
-            'v-1': [41.8781, -87.6298], // Chicago, IL
-            'v-2': [40.7128, -74.0060], // NY, NY
-            'v-4': [47.6062, -122.3321], // Seattle, WA
-          };
-          const dest = destCoords[vehicle.id];
-          if (dest) {
-            L.polyline([coords, dest], {
-              color: '#5B3DF5',
-              weight: 2,
-              opacity: 0.5,
-              dashArray: '5, 8'
-            }).addTo(markerGroupRef.current);
-          }
+      L.marker(coords, { icon: svgIcon })
+        .bindPopup(popupContent, { closeButton: false, offset: [0, -10] })
+        .addTo(markerGroup);
+        
+      // Optional path routing simulation (draw lines to target destination cities)
+      if (vehicle.status === 'Active' || vehicle.status === 'In Service') {
+        const destCoords: Record<string, [number, number]> = {
+          'v-1': [41.8781, -87.6298], // Chicago, IL
+          'v-2': [40.7128, -74.0060], // NY, NY
+          'v-4': [47.6062, -122.3321], // Seattle, WA
+        };
+        const dest = destCoords[vehicle.id];
+        if (dest) {
+          L.polyline([coords, dest], {
+            color: '#5B3DF5',
+            weight: 2,
+            opacity: 0.5,
+            dashArray: '5, 8'
+          }).addTo(markerGroup);
         }
       }
     });
