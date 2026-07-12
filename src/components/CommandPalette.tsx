@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Truck, Users, MapPin, Wrench, Fuel, CreditCard, BarChart3, Settings, ShieldAlert, Plus, Command } from 'lucide-react';
+import { Search, Truck, Users, MapPin, Wrench, Fuel, CreditCard, BarChart3, Settings, User, ShieldAlert, Plus, Command } from 'lucide-react';
 import { Vehicle, Driver, Trip } from '../types';
 
 interface CommandPaletteProps {

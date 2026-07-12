@@ -40,7 +40,7 @@ export default function Sidebar({
     'Southern Fleet Hub'
   ];
 
-  const menuItems = user?.role === 'Admin'
+  const menuItems: any[] = user?.role === 'Admin'
     ? [
         { id: 'dashboard', label: 'Executive Dashboard', icon: LayoutDashboard },
         { id: 'vehicles', label: 'Fleet Vehicles', icon: Truck, count: vehiclesCount },

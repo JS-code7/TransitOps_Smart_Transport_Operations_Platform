@@ -40,7 +40,7 @@ interface LoginResponse {
   user: UserSession;
 }
 
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/$/, '');
+const API_BASE_URL = ((import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:8000/api').replace(/\/$/, '');
 const SESSION_KEY = 'to_session';
 const TOKEN_KEY = 'to_token';
 
