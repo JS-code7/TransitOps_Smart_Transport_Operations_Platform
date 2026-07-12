@@ -215,19 +215,30 @@ export default function Sidebar({
 
       {/* User Card Profile Footer */}
       <div className="p-3 border-t border-slate-800 bg-slate-950/60">
-        <div className="flex items-center space-x-2.5 overflow-hidden">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#5B3DF5] to-[#7C5CFC] text-white flex items-center justify-center font-bold text-sm shrink-0 uppercase shadow-md shadow-[#5B3DF5]/15">
-            {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'JD'}
+        {sidebarCollapsed ? (
+          <div className="flex flex-col items-center space-y-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#5B3DF5] to-[#7C5CFC] text-white flex items-center justify-center font-bold text-sm shrink-0 uppercase shadow-md shadow-[#5B3DF5]/15" title={user ? user.name : 'James Donovan'}>
+              {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'JD'}
+            </div>
+            <button 
+              onClick={onLogout}
+              className="text-slate-500 hover:text-[#EF4444] hover:bg-slate-800 p-2 rounded-lg transition-all cursor-pointer flex items-center justify-center" 
+              title="Sign Out Workstation"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
-          {!sidebarCollapsed && (
+        ) : (
+          <div className="flex items-center space-x-2.5 overflow-hidden">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#5B3DF5] to-[#7C5CFC] text-white flex items-center justify-center font-bold text-sm shrink-0 uppercase shadow-md shadow-[#5B3DF5]/15">
+              {user ? user.name.split(' ').map((n: string) => n[0]).join('') : 'JD'}
+            </div>
             <div className="flex-1 overflow-hidden leading-tight">
               <p className="text-xs font-bold text-white truncate">{user ? user.name : 'James Donovan'}</p>
               <p className="text-[9px] text-slate-500 font-semibold truncate uppercase tracking-wider">
                 {user?.role === 'Admin' ? 'Fleet Director' : 'Active Duty Driver'}
               </p>
             </div>
-          )}
-          {!sidebarCollapsed && (
             <button 
               onClick={onLogout}
               className="text-slate-500 hover:text-[#EF4444] hover:bg-slate-800 p-1.5 rounded-lg transition-all cursor-pointer" 
@@ -235,8 +246,8 @@ export default function Sidebar({
             >
               <LogOut className="w-4 h-4" />
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </aside>
   );

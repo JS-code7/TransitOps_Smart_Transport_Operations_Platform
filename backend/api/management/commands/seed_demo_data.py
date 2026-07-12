@@ -131,15 +131,10 @@ class Command(BaseCommand):
                 theme='Light',
             )
 
-            admin_user = User.objects.create_user(username='admin@transitops.com', email='admin@transitops.com')
-            admin_user.set_unusable_password()
-            admin_user.is_staff = True
-            admin_user.save(update_fields=['password', 'is_staff'])
+            admin_user = User.objects.create_superuser(username='admin@transitops.com', email='admin@transitops.com', password='admin')
             UserProfile.objects.create(user=admin_user, role=RoleChoice.ADMIN, display_name='James Donovan')
 
-            driver_user = User.objects.create_user(username='alex@transitops.com', email='alex@transitops.com')
-            driver_user.set_unusable_password()
-            driver_user.save(update_fields=['password'])
+            driver_user = User.objects.create_user(username='alex@transitops.com', email='alex@transitops.com', password='admin')
             UserProfile.objects.create(user=driver_user, role=RoleChoice.DRIVER, driver_id='d-alex', display_name='Alex Rivera')
 
         self.stdout.write(self.style.SUCCESS('TransitOps demo data seeded successfully.'))
